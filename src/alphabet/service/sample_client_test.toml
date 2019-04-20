@@ -1,0 +1,13 @@
+#客户端获取服务信息
+[[client]]
+groupIds=["g1"]
+maxPoolSize=10
+
+
+[[client.register]]
+type = "etcd"
+endpoints = ["127.0.0.1:2379"]
+username  = "serv001"
+password  = "123456"
+timeout = 2     # 2秒
+root = "awroot_serv001"

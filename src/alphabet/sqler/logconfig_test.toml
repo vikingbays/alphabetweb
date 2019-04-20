@@ -1,0 +1,19 @@
+#format:
+#       %T - Time (15:04:05 MST)
+#       %t - Time (15:04)
+#       %D - Date (2006/01/02)
+#       %d - Date (01/02/06)
+#       %L - Level (FNST, FINE, DEBG, TRAC, WARN, EROR, CRIT)
+#       %S - Source
+#       %G - goroutine ID
+#       %U - Unique serial number
+#       %M - Message
+#       It ignores unknown format strings (and removes them)
+#       Recommended: "[%D %T] [%L] (%S) %M"
+
+[[filters]]
+enabled="true"
+tag="stdout"
+type="console"
+level="INFO"   # 设置级别，从低到高 (:?FINEST|FINE|DEBUG|TRACE|INFO|WARNING|ERROR)
+format="[%D %T] [%L] (%S) %U %M "     #[%D %T] [%L] (%S) %M

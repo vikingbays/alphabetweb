@@ -1,0 +1,31 @@
+#示例代码：
+#register  一个server只能注册到一个服务中心，用于服务端注册到服务中心
+[[server]]
+groupId="g1"
+groupName="g1_name"
+protocol="rpc_tcp"  #rpc_tcp,rpc_unix,rpc_tcp_ssl
+ipType="ipv4"        # 使用ipv4 还是 ipv6
+ip="127.0.0.1"    # 如果配置 * 表示任意指定有效网卡
+port=9000
+webContext="web2"
+
+
+[[server.register]]
+type="etcd"
+endpoints = ["127.0.0.1:2379"]
+username  = "serv001"
+password  = "123456"
+timeout = 2     # 2秒
+root = "awroot_serv001"
+
+[[server.rpcs]]
+rpcId="DB_QUERY"
+url="/db/query"
+desc="DB_QUERY...desc...."
+available=true
+
+[[server.rpcs]]
+rpcId="REST_USER"
+url="/rest/user"
+desc="REST_USER...desc...."
+available=true
