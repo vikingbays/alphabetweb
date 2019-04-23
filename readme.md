@@ -1,5 +1,7 @@
 # Vikingbays • AlphabetWeb
 
+更多资料，请访问 : [https://www.vikingbays.com](https://www.vikingbays.com) 。
+
 AlphabetWeb希望提供更加专业的，更加高效的，更加方便的开发架构，
 
 AlphabetWeb是一个服务端开发框架，可用于搭建一个web网站，也可以构建复杂的微服务场景，也可用于中后台服务定制。AlphabetWeb采用Golang语言实现，具有一次开发多平台部署，运行效率更优。AlphabetWeb架构设计之初，不仅提供丰富的组件包，而且从开发者角度，注重开发过程的便捷性。
@@ -468,7 +470,7 @@ sample_helloworld="/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld
 go run $AlphabetwebProject/src/alphabet/cmd/abserver.go -start "$sample_helloworld"
 ```
 
-#### 4.1. 验证
+#### 4.2. 验证
 访问：
 ```
 http://localhost:9009/web1/hello/helloworld
