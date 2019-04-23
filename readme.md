@@ -151,3 +151,324 @@ src
            ms_server_config.toml      # (可选)微服务的服务端配置文件 。
            ms_client_config_01.toml   # (可选)微服务的服务端配置文件，可以是多个 _02 _03 _04 ....
 ```
+
+
+## 三、Helloworld : 第一个web应用
+
+通过一个Helloworld的例子，学习基于alphabetWeb搭建web应用。
+
+### 1. 项目路径和目录
+项目路径：/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld
+
+创建项目目录：
+```
+sample_helloworld
+   bin
+   logs
+   pkg
+   upload
+   src
+      helloworldsimple
+```
+
+### 2. 创建Sysconfig配置项
+
+#### 2.1. 创建webconfig.toml
+所在路径：/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld/src/helloworldsimple/webconfig.toml
+
+配置内容如下：
+```toml
+[[servers]]
+protocol="http"              # 定义协议，采用http方式， 支持协议有：http，https, fcgi_unix ,rpc_unix ,rpc_tcp ,rpc_tcp_ssl
+                             # 其中fcgi_unix是指：fcgi UnixDomainSocket ,rpc_unix是指：rpc方式的 UnixDomainSocket
+addr=""                      # 定义地址, 如果protocol="unix"，那么addr就需要设置为xxxx.sock的文件地址，例如： "/tmp/alphabetsample.sock"
+                             # 支持 ${project} 变量，表示项目根目录
+                             #   addr="${project}/alphabetsample.sock"
+port=9009                    # 定义端口
+timeout=100                  # 超时时长，单位秒
+maxconn=100                  # 最大连接数，暂时不支持
+
+[[web]]
+context="web1"                       # 定义web访问根路径
+apps="*"                             # 是否过滤应用包
+mode="develop"                       # develop 是开发者模式， product 是生产模式，
+i18n="en"                            # 设置缺省的国际化信息，如果定义 i18n="en" ，那么就会查找 /apps/app**/i18n/en.toml内容
+sessionid="alphabet09-session-id"    # 设置sessionid 信息
+sessionmaxage=600                    # 设置session失效日期，单位是秒
+sessionobjectcount=10000             # 设置session可以存储的对象数，超过该对象，就会启动清理 ，一个对象就是一个session会话
+sessiongenkey="dA~$%3@2*sAw  (:sQQ"  # 设置session产生key，用于加密
+sessionstore="memory"                # session存储方式，支持 memory 和 redis 两种
+sessionstorename="cache2"            # 设置session存储库的名称，
+                                     # 如果是redis方式，那么就是设置cachesconfig.toml的某个库；
+                                     # 如果是memory方式，那么就设置""。
+                                     # 如果没有设置，那么默认是memory方式。
+
+[[uploadfile]]
+memcachesize=8388608                 # 文件在读取过程中的缓存大小,单位字节，在一定范围内越大，读写速度越快
+maxsize=33554432                     # 文件大小,单位字节
+storepath="${project}/upload"        # 文件上传的存储地址,其中 ${project} 表示项目根目录，例如：${project}/upload
+splitonapps=true                     # 是否按照应用（apps）分目录
+
+[[project]]
+cpunum=3                             # 设置CPU使用个数
+
+```
+
+#### 2.2. 创建logconfig.toml
+
+所在路径：/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld/src/helloworldsimple/logconfig.toml
+
+配置内容如下：
+```TOML
+[[filters]]
+enabled="true"
+tag="file"
+type="file"
+level="INFO"   # �������� (:?FINEST|FINE|DEBUG|TRACE|INFO|WARNING|ERROR)
+format="[%D %T] [%L] (%S) %M "   
+
+filename="${project}/logs/apps.log"  # ���Դ����� ${project}/logs/test.log
+rotate="false"
+rotateMaxSize="0"    #\d+[KMG]? Suffixes are in terms of 2**10
+rotateMaxLines="0"   #\d+[KMG]? Suffixes are in terms of thousands
+rotateDaily="false"
+```
+
+#### 2.3. 创建logconfig_http.toml
+
+所在路径：/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld/src/helloworldsimple/logconfig_http.toml
+
+配置内容如下：
+
+```toml
+[[filters]]
+enabled="true"
+tag="file"
+type="file"
+level="INFO"   # �������� (:?FINEST|FINE|DEBUG|TRACE|INFO|WARNING|ERROR)
+format="[%D %T] [%L] %M "   
+
+filename="${project}/logs/http.log"  # ���Դ����� ${project}/logs/test.log
+rotate="false"
+rotateMaxSize="0"    #\d+[KMG]? Suffixes are in terms of 2**10
+rotateMaxLines="0"   #\d+[KMG]? Suffixes are in terms of thousands
+rotateDaily="false"
+```
+
+### 3. 创建应用功能
+
+#### 3.1. 搭建应用目录
+一个常规的应用目录结构如下：
+
+```
+sample_helloworld
+   ...
+   src
+      helloworldsimple
+         hello
+            config        #(可选)
+               db         #(可选) sql配置文件存储
+            i18n          #(可选) 国际化
+            resource      # 静态资源
+            view          # 视图
+```
+
+#### 3.2. 创建控制器代码
+
+创建一个helloworld.go文件。
+
+所在路径： /src/helloworldsimple/hello/helloworld.go
+
+编写控制器代码：
+
+```go
+package hello
+
+import (
+	"alphabet/web"
+)
+
+/**
+ * 访问方式：  http://[ip]:[port]/[webcontext]/hello/helloworld
+ */
+
+type GiftInfo struct {
+	GName   string
+	GNumber int
+	GFriend []string
+}
+
+type ParamHelloWorld struct {
+	GiftName   string
+	GiftNumber int
+	Friends    []string
+}
+
+func HelloWorld(paramHelloWorld *ParamHelloWorld, context *web.Context) {
+
+	if paramHelloWorld == nil {
+		context.Return.Forward("helloworld_index", nil)
+	} else {
+		if paramHelloWorld.GiftName != "" {
+			giftInfo := new(GiftInfo)
+			giftInfo.GName = paramHelloWorld.GiftName
+			giftInfo.GNumber = paramHelloWorld.GiftNumber
+			giftInfo.GFriend = paramHelloWorld.Friends
+			context.Return.Forward("helloworld_gift", giftInfo)
+		} else {
+			context.Return.Forward("helloworld_index", nil)
+		}
+	}
+
+}
+```
+
+#### 3.3. 创建视图代码
+添加 helloworld_index.gml 和 helloworld_gift.gml
+
+所在路径：/src/helloworldsimple/hello/view/helloworld_index.gml
+
+所在路径：/src/helloworldsimple/hello/view/helloworld_gift.gml
+
+helloworld_index.gml是默认初始化页面，具体代码如下：
+```html
+<html>
+
+<script src="resource/jquery/jquery-1.12.1.js"></script>
+<script src="resource/bootstrap3.3.6/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/docs.min.css">
+
+<body>
+
+  <div style='height:60px'></div>
+
+  <div class="container">
+
+  <div>
+    <form class="form-inline"  action="">
+      <br>
+      <div class="form-group" style='padding-top:15px'>
+      <label for="giftNameId">礼物 :</label>
+      <input type="text" style="width:200px" class="form-control" name='giftName' id='giftNameId' placeholder="请输入礼物">
+      </div>
+      <br>
+      <div class="form-group" style='padding-top:15px'>
+      <label for="giftNumberId">数量 :</label>
+      <input type="text" style="width:200px" class="form-control" name='giftNumber' id='giftNumberId' placeholder="请输入数量">
+      </div>
+      <br>
+      <div class="form-group" style='padding-top:15px'>
+      <label for="giveId">"送给 :</label>
+      <input type="text" style="width:80px" class="form-control" name='friends' id='giveId' >，
+      <input type="text" style="width:80px" class="form-control" name='friends' id='giveId' >，
+      <input type="text" style="width:80px" class="form-control" name='friends' id='giveId' >，
+      <input type="text" style="width:80px" class="form-control" name='friends' id='giveId' >
+      </div>
+      <br>
+       <div class="form-group" style='padding-top:15px'>
+      <button type="submit" class="btn btn-primary">提交</button>
+      </div>
+    </form>
+  </div>
+  </div>
+</body>
+</html>
+```
+
+helloworld_gift.gml是获取数据页面，具体代码如下：
+
+```html
+<html>
+
+<script src="resource/jquery/jquery-1.12.1.js"></script>
+<script src="resource/bootstrap3.3.6/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="resource/bootstrap3.3.6/css/docs.min.css">
+
+<body>
+
+  <div style='height:60px'></div>
+
+  <div class="container">
+
+  <div class="bs-callout bs-callout-danger" id="callout-glyphicons-dont-mix">
+    <h4>从Form表单中直接收到 : </h4>
+    <p>
+      <div>
+       礼物 : {{index .Params.giftName 0}}
+       </div>
+       <div>
+       数量: {{index .Params.giftNumber 0}}
+       </div>
+       <div>
+       送给 : {{index .Params.friends 0}} ，
+             {{index .Params.friends 1}} ，
+             {{index .Params.friends 2}} ，
+             {{index .Params.friends 3}}
+       </div>
+    </p>
+  </div>
+
+  <div class="bs-callout bs-callout-info" id="callout-glyphicons-dont-mix">
+    <h4>从加工的数据中收到 :  </h4>
+    <p>
+      <div class="respDataForGiftName">
+       礼物 : <span>{{.Datas.GName}}</span>
+       </div>
+       <div class="respDataForGiftNumber">
+       数量 : <span>{{.Datas.GNumber}}</span>
+       </div>
+       <div class="respDataForFriends">
+       送给 : {{range $n,$v := .Datas.GFriend}}
+                {{if ne $v ""}}
+                   <span>{{$v}}</span>,
+                {{end}}
+             {{end}}
+       </div>
+    </p>
+  </div>
+
+  </div>
+
+</body>
+</html>
+```
+
+#### 3.4. 配置路由规则
+配置路由规则route.toml。 所在路径：/src/helloworldsimple/hello/route.toml
+
+```toml
+[[action]]
+HelloWorld="helloworld"
+
+[[gml]]
+helloworld_index="view/helloworld_index.gml"
+helloworld_gift="view/helloworld_gift.gml"
+```
+
+#### 3.5. 预计访问路径
+```
+http://localhost:9009/web1/hello/helloworld
+```
+
+### 4. 启动项目并验证
+#### 4.1. 启动项目
+启动命令：
+```
+AlphabetwebProject="/Users/vikingbays/golang/AlphabetwebProject/alphabetweb"
+
+sample_helloworld="/Users/vikingbays/golang/AlphabetwebProject/sample_helloworld"
+
+go run $AlphabetwebProject/src/alphabet/cmd/abserver.go -start "$sample_helloworld"
+```
+
+#### 4.1. 验证
+访问：
+```
+http://localhost:9009/web1/hello/helloworld
+```
