@@ -12,7 +12,7 @@ AlphabetWeb 采用MVC的web架构，提供分布式session管理（AlphabetWeb.W
 
 ###特性/价值介绍
 
-1. AlphabetWeb 提供丰富的套餐组合。
+###### __1. AlphabetWeb 提供丰富的套餐组合。__
 AlphabetWeb提供常用的服务端开发解决方案 ，包含了：1）、MVC 的web架构，2）、ORM数据访问、3）、统一日志管理、4）、集成第三方中间件框架，适配mysql、Postgresql、redis 等。
 
 2. AlphabetWeb 支持友好的微服务场景。
