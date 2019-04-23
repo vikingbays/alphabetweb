@@ -78,13 +78,13 @@ $ go version
 ```
 说明：
 
-GOROOT 用于设置golang的安装路径。
+  GOROOT 用于设置golang的安装路径。
 
-GOPATH 用于设置第三方应用路径，可以设置多个。
+  GOPATH 用于设置第三方应用路径，可以设置多个。
 
-通过go install/go get等工具获取的第三方包都放入到GOPATH设置的第一个路径中。
+    通过go install/go get等工具获取的第三方包都放入到GOPATH设置的第一个路径中。
 
-GOPATH设置的路径是一个工程项目，里面主要包含三个目录: bin、pkg、src 。
+    GOPATH设置的路径是一个工程项目，里面主要包含三个目录: bin、pkg、src 。
 
 ### 3.安装AlphabetWeb
 在github上下载AlphabetWeb安装包，下载后完成后，解压到指定目录，例如：
