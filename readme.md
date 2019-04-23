@@ -10,9 +10,9 @@ AlphabetWeb提供的架构图如下：
 AlphabetWeb 采用MVC的web架构，提供分布式session管理（AlphabetWeb.Web）。提供多种组件：包括：数据库访问（AlphabetWeb.Sqler）、日志管理（AlphabetWeb.log4go）、国际化支持（AlphabetWeb.i18n）、缓存管理（AlphabetWeb.Cache）。服务访问支持标准的应用协议，包括：http/1.1，https，http/2，fcgi，unixDS等协议（AlphabetWeb.Protocol），同时也可以采用微服务方式访问（AlphabetWeb.MicroService），同时提供对应的客户端包访问（AlphabetWeb.Client）。AlphabetWeb 项目管理提供一套命令工具集、构建约定等（AlphabetWeb.Project），同时提供项目配置项管理（AlphabetWeb.Sysconfig）。AlphabetWeb 可以在Linux、Mac、Windows等平台上开发（AlphabetWeb.RunningOS），可运行在ARM、X86等架构上（AlphabetWeb.Architecture）。
 
 
-###特性/价值介绍
+### 特性/价值介绍
 
-###### __1. AlphabetWeb 提供丰富的套餐组合。__
+#### __1. AlphabetWeb 提供丰富的套餐组合。__
 AlphabetWeb提供常用的服务端开发解决方案 ，包含了：1）、MVC 的web架构，2）、ORM数据访问、3）、统一日志管理、4）、集成第三方中间件框架，适配mysql、Postgresql、redis 等。
 
 2. AlphabetWeb 支持友好的微服务场景。
