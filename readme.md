@@ -108,9 +108,12 @@ export GOPATH = "$GOPATH:/Users/vikingbays/golang/mygopath"
 ### 4.安装IDE：Atom
 在https://atom.io下载Atom安装包。根据不同的平台，选择不同的安装包。
 
-下载并安装完成后启动Atom，打开Atom界面如下： Atom_start
+下载并安装完成后启动Atom，打开Atom界面如下：
 
-选择Atom->Preferences->Install , 安装插件：go-plus ， file-icons ， atom-beautify 。界面如下： Atom_start
+![Atom_start](imgs/afirst_02install_001.png)
+
+选择Atom->Preferences->Install , 安装插件：go-plus ， file-icons ， atom-beautify 。界面如下：
+![Atom_start](imgs/afirst_02install_002.png)
 
 ### 5.创建一个AlphabetWeb项目
 一个AlphabetWeb项目的构成需要满足如下原则：
