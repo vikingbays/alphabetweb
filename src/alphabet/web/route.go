@@ -104,15 +104,15 @@ func doAction(clazz interface{}, clazzType int, url string, appname string, root
 
 					ActionMonitorExtendsObject.AddActionMonitor(url, appname, startTime.UnixNano(), endTime.UnixNano(), err.(error))
 				}
-				log4gohttp.ErrorLog("interval : %6d ms . protocol: %s . client.Addr : %s . server.Host : %s  ,  server.url : %s  .  Webapp Err [errmsg: %v] .  \n %s", time.Now().Sub(startTime)/1000/1000,
-					r.Proto, r.RemoteAddr, r.Host, url, err, env.GetInheritCodeInfoAlls("panic.go", true))
+				log4gohttp.ErrorLog("interval : %6d ms . protocol: %s . client.Addr : %s . server.Host : %s  , server.context: %s ,  server.url : %s  .  Webapp Err [errmsg: %v] .  \n %s", time.Now().Sub(startTime)/1000/1000,
+					r.Proto, r.RemoteAddr, r.Host, env.Env_Web_Context[rootAppname], url, err, env.GetInheritCodeInfoAlls("panic.go", true))
 				//w.WriteHeader(500)
 				Page500(w, r, rootAppname)
 			} else {
 				if ActionMonitorExtendsObject != nil { // 如果实现了监听，就记录相关信息
 					ActionMonitorExtendsObject.AddActionMonitor(url, appname, startTime.UnixNano(), endTime.UnixNano(), nil)
 				}
-				log4gohttp.InfoLog("interval : %6d ms . protocol: %s . client.Addr : %s . server.Host : %s  ,  server.url : %s  .  ", time.Now().Sub(startTime)/1000/1000, r.Proto, r.RemoteAddr, r.Host, url)
+				log4gohttp.InfoLog("interval : %6d ms . protocol: %s . client.Addr : %s . server.Host : %s  ,  server.context: %s ,  server.url : %s  .  ", time.Now().Sub(startTime)/1000/1000, r.Proto, r.RemoteAddr, r.Host, env.Env_Web_Context[rootAppname], url)
 			}
 
 			if env.Switch_CallChain {
