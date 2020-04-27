@@ -333,63 +333,62 @@ func DoCmd(cmdName string, params ...string) (err error) {
 		fmt.Printf("生成可执行项目路径：%s . \n", params[1])
 
 		if len(params) == 3 {
-			//第0位：windows
-			//第1位：mac
-			//第2位：linux
-			//第3位：linuxarm
-			platformTypes := [4]int{0, 0, 0, 0}
-			platformGOOSs := [4]string{"windows", "darwin", "linux", "linux"}
-			platformGOARCHs := [4]string{"amd64", "amd64", "amd64", "arm"}
-			platformServerNames := [4]string{"server_windows.exe", "server_mac", "server_linux", "server_linuxarm"}
-			if params[2] == "windows" {
-				platformTypes[0] = 1
-			} else if params[2] == "mac" {
-				platformTypes[1] = 1
-			} else if params[2] == "linux" {
-				platformTypes[2] = 1
-			} else if params[2] == "linuxarm" {
-				platformTypes[3] = 1
-			} else if params[2] == "all" {
-				platformTypes = [4]int{1, 1, 1, 1}
-			}
+			//第三个参数的形式是： windows/arm , darwin/amd64 等，如果是多个用分号分割，例如：  windows/arm:darwin/amd64
+			{
+				if strings.Contains(params[2], ":") {
+					goosArchs := strings.Split(params[2], ":")
+					for _, goosArch := range goosArchs {
+						pos := strings.Index(goosArch, "/")
+						if pos != -1 {
+							os.Setenv("GOOS", goosArch[0:pos])
+							os.Setenv("GOARCH", goosArch[(pos+1):])
 
-			for i, ptype := range platformTypes {
-				if ptype == 1 {
-					os.Setenv("GOOS", platformGOOSs[i])
-					os.Setenv("GOARCH", platformGOARCHs[i])
-					buildServerCmd(filename, params[1]+"/bin/"+platformServerNames[i], (cmdName == "-build_for_debug"))
-					fmt.Printf("生成可执行程序在：%s . \n", "bin/"+platformServerNames[i])
+							goosStr := os.Getenv("GOOS")
+							goarchStr := os.Getenv("GOARCH")
+							fmt.Printf("GOOS=%s ，GOARCH=%s . \n", goosStr, goarchStr)
+							exeAppname := "server"
+							if goosStr != "" {
+								exeAppname = exeAppname + "_" + goosStr
+							}
+							if goarchStr != "" {
+								exeAppname = exeAppname + "_" + goarchStr
+							}
+							if goosStr == "windows" {
+								exeAppname = exeAppname + ".exe"
+							}
+							buildServerCmd(filename, params[1]+"/bin/"+exeAppname, (cmdName == "-build_for_debug"))
+							fmt.Printf("生成可执行程序在：%s . \n", "bin/"+exeAppname)
+			}
+					}
+				} else {
+					if params[2] != "" {
+						pos := strings.Index(params[2], "/")
+						if pos != -1 {
+							os.Setenv("GOOS", params[2][0:pos])
+							os.Setenv("GOARCH", params[2][(pos+1):])
+
 				}
+			}
+					goosStr := os.Getenv("GOOS")
+					goarchStr := os.Getenv("GOARCH")
+					fmt.Printf("GOOS=%s ，GOARCH=%s . \n", goosStr, goarchStr)
+					exeAppname := "server"
+					if goosStr != "" {
+						exeAppname = exeAppname + "_" + goosStr
+					}
+					if goarchStr != "" {
+						exeAppname = exeAppname + "_" + goarchStr
+		}
+					if goosStr == "windows" {
+						exeAppname = exeAppname + ".exe"
+					}
+					buildServerCmd(filename, params[1]+"/bin/"+exeAppname, (cmdName == "-build_for_debug"))
+					fmt.Printf("生成可执行程序在：%s . \n", "bin/"+exeAppname)
+				}
+
 			}
 
 		}
-
-		/*
-				buildOutFileName := "server"
-				if len(params) == 3 {
-					if params[2] == "windows" {
-						os.Setenv("GOOS", "windows")
-						os.Setenv("GOARCH", "amd64")
-						buildOutFileName = buildOutFileName + ".exe"
-					} else if params[2] == "mac" {
-						os.Setenv("GOOS", "darwin")
-						os.Setenv("GOARCH", "amd64")
-					} else if params[2] == "linux" {
-						os.Setenv("GOOS", "linux")
-						os.Setenv("GOARCH", "amd64")
-					} else if params[2] == "linuxarm" {
-						os.Setenv("GOOS", "linux")
-						os.Setenv("GOARCH", "arm")
-					}
-				}
-
-				buildOutFile := params[1] + "/bin/" + buildOutFileName
-
-				buildServerCmd(filename, buildOutFile)
-
-
-			fmt.Printf("生成可执行程序在：%s . \n", "bin/"+buildOutFileName)
-		*/
 
 	}
 
@@ -398,23 +397,37 @@ func DoCmd(cmdName string, params ...string) (err error) {
 }
 
 func buildServerCmd(mainFilename string, buildOutFile string, buildForDebug bool) {
+
 	var cmd *exec.Cmd
 	if buildForDebug {
 		cmd = exec.Command("go", "build", "-gcflags", "-N -l", "-o", buildOutFile, mainFilename)
-	} else {
-		cmd = exec.Command("go", "build", "-o", buildOutFile, mainFilename)
+	} else { //-ldflags "-s -w"
+		cmd = exec.Command("go", "build", "-ldflags", "-s -w", "-o", buildOutFile, mainFilename)
 	}
 
+	envs := os.Environ()
+	inEnvs := make([]string, 0, 1)
+	for _, env := range envs {
+		if strings.HasPrefix(env, "AB_") && len(env) > 4 {
+			inEnvs = append(inEnvs, env[3:])
+	} else {
+			inEnvs = append(inEnvs, env)
+	}
+	}
+	cmd.Env = inEnvs
+	fmt.Printf("cmd.Env=%s \n", cmd.Env)
+	fmt.Printf("building.... buildOutFile=%s , mainFilename=%s \n", buildOutFile, mainFilename)
 	bytes, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println("Running error : ", err)
 	}
 	fmt.Println(string(bytes))
-
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println(err)
+	/*
+		err2 := cmd.Run()
+		if err2 != nil {
+			fmt.Println(err2)
 	}
+	*/
 
 }
 
@@ -636,22 +649,20 @@ command说明：(所有文件路径的分隔符都必须使用｀／｀)
                    生成web服务启动二进制程序。
                    参数1：web工程根路径，源码存放在 src/apps下。
                    参数2：输出项目文件夹路径，默认可执行文件在此目录的bin目录下。
-                   参数3：平台定义，如果不传参数，表示就是当前平台。
-                           其中：｀windows｀  ：表示windows平台。
-                                 ｀mac｀      ：表示mac平台。
-                                 ｀linux｀    ：表示linux平台。
-                                 ｀linuxarm｀ ：表示linux的arm平台。
-                                 ｀all｀      ：表示生成所有平台。
+                   参数3：平台定义，设置生成运行平台的代码，例如：windows/arm , darwin/amd64 等。
+                          如果是多个用分号分割，例如：  windows/arm:darwin/amd64
+                          具体平台信息可以通过命令查找：go tool dist list
+                          补充：如果是android平台，需要设置 CC、CXX、CGO_ENABLED、GO111MODULE参数，在执行命令前定义(用AB_前缀)，例如：
+                          AB_CC=/xxxx/android-ndk-r19c/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang        \
+                          AB_CXX=/xxxx/android-ndk-r19c/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang++     \
+                          AB_CGO_ENABLED=1 AB_GO111MODULE=off                                                                             \
+                          go run /xxxx/alphabetweb/src/alphabet/cmd/abserver.go  -build "..." "..." "android/arm64"
 
        -build_for_debug    string  string  string
                    生成web服务启动二进制程序，支持gdb进行debug（ 在编译时增加参数 -gcflags "-N -l" ）。
                    参数1：web工程根路径，源码存放在 src/apps下。
                    参数2：输出项目文件夹路径，默认可执行文件在此目录的bin目录下。
-                   参数3: 平台定义，
-                           其中：｀windows｀  ：表示windows平台。
-                                 ｀mac｀      ：表示mac平台。
-                                 ｀linux｀    ：表示linux平台。
-                                 ｀linuxarm｀ ：表示linux的arm平台。
+                   参数3: 参考-build
 
        -help
                    展现帮助信息。
